@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>YouTube Channel Audit</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 40px auto;
+        }
+        input, button {
+            padding: 10px;
+            font-size: 16px;
+        }
+        button {
+            cursor: pointer;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border: 1px solid #ddd;
+        }
+        .audit {
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+
+<h1>YouTube Channel Audit Tool</h1>
+
+<p>Enter YouTube channel handle (example: <b>googledevelopers</b>)</p>
+
+<input type="text" id="channelInput" placeholder="channel handle">
+<button onclick="runAudit()">Check Channel Health</button>
+
+<div id="output" class="result"></div>
+
+<script>
+async function runAudit() {
+    const channel = document.getElementById("channelInput").value.trim();
+    const output = document.getElementById("output");
+
+    if (!channel) {
+        output.innerHTML = "<p>Please enter a channel handle.</p>";
+        return;
+    }
+
+    output.innerHTML = "<p>Loading audit...</p>";
+
+    try {
+        const response = await fetch(
+            `http://127.0.0.1:8000/audit?channel=${channel}`
+        );
+        const data = await response.json();
+
+        if (!data.success) {
+            output.innerHTML = "<p>Channel not found.</p>";
+            return;
+        }
+
+        let html = `
+            <h2>${data.channel.name}</h2>
+            <p><b>Subscribers:</b> ${data.channel.subscribers}</p>
+            <p><b>Total Views:</b> ${data.channel.views}</p>
+            <p><b>Total Videos:</b> ${data.channel.videos}</p>
+            <hr>
+        `;
+
+        for (const key in data.audits) {
+            const audit = data.audits[key];
+            html += `
+                <div class="audit">
+                    <h3>${key.replace("_", " ").toUpperCase()}</h3>
+                    <p><b>Status:</b> ${audit.status}</p>
+                    <p>${audit.message}</p>
+                </div>
+            `;
+        }
+
+        output.innerHTML = html;
+
+    } catch (error) {
+        output.innerHTML = "<p>Error connecting to API.</p>";
+    }
+}
+</script>
+
+</body>
+</html>

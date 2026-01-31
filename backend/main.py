@@ -1,8 +1,8 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from youtube_api import router as youtube_router
-from facebook_api import router as facebook_router
+from backend.youtube_api import router as youtube_router
+from backend.facebook_api import router as facebook_router
 
 app = FastAPI(
     title="Audit Platform API",

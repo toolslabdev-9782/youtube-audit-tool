@@ -1,3 +1,4 @@
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi import FastAPI, HTTPException
 from youtube_api import get_channel_basic_stats
 from audit_rules import (
@@ -7,6 +8,18 @@ from audit_rules import (
 )
 
 app = FastAPI(title="YouTube Channel Audit API")
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "https://audit.techinyourlife.com",
+        "http://localhost",
+        "http://localhost:3000"
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 
 @app.get("/")
 def home():

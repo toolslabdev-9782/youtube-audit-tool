@@ -1,64 +1,55 @@
-from fastapi.middleware.cors import CORSMiddleware
 from fastapi import FastAPI, HTTPException
-from youtube_api import get_channel_basic_stats
+from datetime import datetime
+from youtube_api import get_channel_data
 from audit_rules import (
-    content_volume_health,
+    channel_health,
     upload_consistency,
-    subscriber_conversion_efficiency
+    conversion_efficiency
 )
 
-app = FastAPI(title="YouTube Channel Audit API")
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=[
-        "https://audit.techinyourlife.com",
-        "http://localhost",
-        "http://localhost:3000"
-    ],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+app = FastAPI()
 
 
 @app.get("/")
 def home():
     return {"message": "YouTube Audit API is running"}
 
+
 @app.get("/audit")
 def audit_channel(channel: str):
-    data = get_channel_basic_stats(channel)
+    channel_data = get_channel_data(channel)
 
-    if not data:
+    if not channel_data:
         raise HTTPException(status_code=404, detail="Channel not found")
 
-    audit_1 = content_volume_health(
-        data["subscribers"],
-        data["videos"]
-    )
+    stats = channel_data["statistics"]
+    snippet = channel_data["snippet"]
 
-    audit_2 = upload_consistency(
-        data["videos"],
-        data["published_at"]
-    )
+    subscribers = int(stats.get("subscriberCount", 0))
+    views = int(stats.get("viewCount", 0))
+    videos = int(stats.get("videoCount", 0))
 
-    audit_3 = subscriber_conversion_efficiency(
-        data["subscribers"],
-        data["videos"]
-    )
+    published_at = snippet.get("publishedAt")
+    years_active = 0
+    if published_at:
+        years_active = max(
+            1,
+            datetime.now().year - datetime.fromisoformat(published_at.replace("Z", "")).year
+        )
+
+    audits = {
+        "channel_health": channel_health(subscribers, videos),
+        "upload_consistency": upload_consistency(videos, years_active),
+        "conversion_efficiency": conversion_efficiency(subscribers, views)
+    }
 
     return {
         "success": True,
         "channel": {
-            "name": data["channel_name"],
-            "subscribers": data["subscribers"],
-            "views": data["views"],
-            "videos": data["videos"],
-            "created": data["published_at"]
+            "name": snippet.get("title"),
+            "subscribers": subscribers,
+            "views": views,
+            "videos": videos
         },
-        "audits": {
-            "content_volume_health": audit_1,
-            "upload_consistency": audit_2,
-            "subscriber_conversion_efficiency": audit_3
-        }
+        "audits": audits
     }

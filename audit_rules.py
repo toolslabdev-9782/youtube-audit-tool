@@ -1,133 +1,68 @@
-# Audit Rules v1
-# Status: Frozen
-# Any new rules must go into v2
-
-from datetime import datetime
-
-def content_volume_health(subscribers, videos):
-    """
-    Evaluates content volume vs subscriber traction.
-    Returns a simple status and mentor-style message.
-    """
-
-    subscribers = int(subscribers)
-    videos = int(videos)
-
-    if videos > 100 and subscribers < 1000:
+def channel_health(subscribers, videos):
+    if subscribers < 1000 and videos > 50:
         return {
-            "status": "Weak traction",
-            "message": (
-                "You have published many videos, but subscriber growth is still low. "
-                "This usually means the content topic or presentation lacks clarity. "
-                "Try focusing on one clear niche and improving titles and thumbnails."
-            )
+            "status": "Poor",
+            "message": "Many videos but very low subscribers. Content positioning needs improvement."
         }
-
-    elif videos < 50 and subscribers > 5000:
-        return {
-            "status": "Strong traction",
-            "message": (
-                "Your channel has gained good subscribers with relatively few videos. "
-                "This is a strong sign of content quality and niche clarity. "
-                "Stay consistent and build on what is already working."
-            )
-        }
-
-    else:
+    elif subscribers < 10000:
         return {
             "status": "Average",
-            "message": (
-                "Your channel shows average traction based on content volume. "
-                "Improving consistency, positioning, and presentation "
-                "can help improve growth over time."
-            )
+            "message": "Channel is growing slowly. Focus on consistency and topic clarity."
         }
-    
-    from datetime import datetime
-
-def upload_consistency(videos, published_at):
-    """
-    Evaluates how consistent the channel is based on age vs total videos.
-    """
-
-    videos = int(videos)
-
-    channel_start = datetime.strptime(
-        published_at, "%Y-%m-%dT%H:%M:%SZ"
-    )
-    today = datetime.utcnow()
-
-    years_active = max((today - channel_start).days / 365, 1)
-    videos_per_year = videos / years_active
-
-    if videos_per_year < 12:
-        return {
-            "status": "Inconsistent",
-            "message": (
-                "This channel uploads very infrequently for its age. "
-                "Long gaps between uploads can slow growth and reduce audience trust."
-            )
-        }
-
-    elif videos_per_year < 50:
-        return {
-            "status": "Moderate",
-            "message": (
-                "This channel uploads occasionally but could benefit from more consistency. "
-                "A predictable schedule helps viewers return regularly."
-            )
-        }
-
     else:
         return {
-            "status": "Consistent",
-            "message": (
-                "This channel shows good upload consistency for its age. "
-                "Maintaining this rhythm supports long-term growth."
-            )
+            "status": "Good",
+            "message": "Healthy subscriber growth relative to content volume."
         }
-    
-def subscriber_conversion_efficiency(subscribers, videos):
-    """
-    Evaluates how effectively videos convert viewers into subscribers.
-    """
 
-    subscribers = int(subscribers)
-    videos = int(videos)
 
-    if videos == 0:
+def upload_consistency(videos, years_active):
+    if years_active == 0:
         return {
-            "status": "Not enough data",
-            "message": "This channel does not have enough videos to evaluate conversion efficiency."
+            "status": "Unknown",
+            "message": "Not enough data to judge upload consistency."
         }
 
-    subs_per_video = subscribers / videos
+    uploads_per_year = videos / years_active
 
-    if subs_per_video < 10:
+    if uploads_per_year < 12:
         return {
-            "status": "Low conversion",
-            "message": (
-                "Your videos are attracting views, but relatively few viewers are subscribing. "
-                "This may indicate unclear value proposition or weak call-to-action."
-            )
+            "status": "Low",
+            "message": "Uploads are infrequent. Consider posting more consistently."
         }
-
-    elif subs_per_video < 50:
+    elif uploads_per_year < 50:
         return {
-            "status": "Average conversion",
-            "message": (
-                "Your channel shows average subscriber conversion per video. "
-                "Improving content hooks and consistency can improve this over time."
-            )
+            "status": "Average",
+            "message": "Moderate upload frequency. Increasing consistency may help growth."
         }
-
     else:
         return {
-            "status": "Strong conversion",
-            "message": (
-                "Your videos convert viewers into subscribers very effectively. "
-                "This is a strong indicator of content quality and audience trust."
-            )
+            "status": "Good",
+            "message": "Strong upload consistency."
         }
-   
 
+
+def conversion_efficiency(subscribers, views):
+    if views == 0:
+        return {
+            "status": "Unknown",
+            "message": "Not enough views to calculate conversion."
+        }
+
+    ratio = subscribers / views
+
+    if ratio < 0.001:
+        return {
+            "status": "Poor",
+            "message": "Low subscriber conversion from views. Improve CTAs and content hooks."
+        }
+    elif ratio < 0.005:
+        return {
+            "status": "Average",
+            "message": "Decent conversion. There is room for optimization."
+        }
+    else:
+        return {
+            "status": "Good",
+            "message": "Strong conversion from views to subscribers."
+        }
